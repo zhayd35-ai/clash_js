@@ -57,22 +57,6 @@ const ruleOptionsEnable = {
 
 // 定义前置规则
 const prefixRules = [
-  // WebRTC 防泄露
-  'DOMAIN-KEYWORD,stun,REJECT',
-  'DOMAIN-KEYWORD,turn,REJECT',
-  'DOMAIN-KEYWORD,stun1,REJECT',
-  'DOMAIN-KEYWORD,stun2,REJECT',
-  'DST-PORT,3478,REJECT',
-  'DST-PORT,5349,REJECT',
-  // QUIC防泄露
-  'AND,((NETWORK,UDP),(DST-PORT,443)),REJECT',
-  // DNS泄露阻断
-  'DOMAIN-SUFFIX,dns.google,REJECT',
-  'DOMAIN-SUFFIX,cloudflare-dns.com,REJECT',
-  'DOMAIN-SUFFIX,mozilla.cloudflare-dns.com,REJECT',
-  'DOMAIN-SUFFIX,doh.opendns.com,REJECT',
-  'DOMAIN-SUFFIX,doh.pub,REJECT',
-  'DOMAIN-SUFFIX,dot.pub,REJECT',
   // 私有网络直连
   'RULE-SET,private,直连',
 
@@ -1208,15 +1192,7 @@ const commonDnsRegex = new RegExp(
 // 国内外 DNS 定义
 const chinaDNS = ['223.5.5.5', '119.29.29.29'];
 const chinaDohDNS = ['https://223.5.5.5/dns-query#DIRECT', 'https://1.12.12.12/dns-query#DIRECT'];
-const foreignDNS = [
-
-  'https://cloudflare-dns.com/dns-query#默认代理',
-
-  'https://dns.google/dns-query#默认代理',
-
-  'https://mozilla.cloudflare-dns.com/dns-query#默认代理'
-
-];
+const foreignDNS = ['https://cloudflare-dns.com/dns-query#默认代理', 'https://dns.google/dns-query#默认代理'];
 
 /**
  * hosts 匹配优先级：精确 > +. > . > *（同级按出现顺序）
@@ -1412,42 +1388,14 @@ function buildDnsAndHostsConfig(config, filteredProxies) {
 
   const dns = {
     enable: true,
-    ipv6: false,
+    ipv6: true,
     'use-hosts': true,
     'cache-algorithm': 'arc',
     'use-system-hosts': true,
     'enhanced-mode': 'fake-ip',
-	'respect-rules': true,
-    'prefer-h3': false,
     'fake-ip-range': '198.18.0.1/15',
     'fake-ip-range6': '2001:2::1/48',
-    'fake-ip-filter': [
-
-    // 内网
-    'localhost',
-    '*.local',
-    '*.lan',
-
-    // 路由器
-    '*.router',
-
-    // WebRTC
-    '*.stun.*',
-    '*.turn.*',
-
-    // Apple
-    '*.apple.com',
-
-    // Microsoft
-    '*.msftconnecttest.com',
-
-    // 原规则
-    'rule-set:private',
-    'rule-set:fakeip_filter',
-    'rule-set:geolocation-cn',
-
-    ...proxyFakeIpFilter
-    ],
+    'fake-ip-filter': ['rule-set:private', 'rule-set:fakeip_filter', 'rule-set:geolocation-cn', ...proxyFakeIpFilter],
     'proxy-server-nameserver': chinaDohDNS,
     ...(Object.keys(proxyServerPolicy).length > 0 && {
       'proxy-server-nameserver-policy': proxyServerPolicy,
